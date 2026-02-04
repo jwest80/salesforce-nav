@@ -11,6 +11,11 @@
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
+/* small gap between nav items for consistent spacing */
+.sf-custom-nav-bar {
+  gap: 0.25rem;
+}
+
 .sf-nav-item {
   position: relative;
   margin-right: 0.5rem;
@@ -28,6 +33,11 @@
   align-items: center;
   transition: background-color 0.2s ease;
   white-space: nowrap;
+}
+
+.sf-nav-button:focus {
+  outline: 2px solid rgba(0,112,210,0.25);
+  outline-offset: 2px;
 }
 
 .sf-nav-button:hover {
@@ -66,6 +76,23 @@
   display: none;
   z-index: 10000;
   margin-top: 2px;
+}
+
+/* Try to avoid dropdowns growing past the viewport and allow long labels */
+.sf-nav-dropdown {
+  white-space: nowrap;
+  min-width: max-content;
+  max-width: calc(100vw - 2rem);
+  box-sizing: border-box;
+  overflow: auto;
+}
+
+/* If dropdown would overflow to the right in narrow containers, allow it to anchor to the right
+   by adding the class `right-align` to the parent `.sf-nav-item` in the HTML markup when needed. */
+.sf-nav-item.right-align .sf-nav-dropdown {
+  left: auto;
+  right: 0;
+  transform-origin: top right;
 }
 
 .sf-nav-button[aria-expanded="true"] + .sf-nav-dropdown {
