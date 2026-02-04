@@ -109,8 +109,6 @@ function createMenuItem(menuGroup) {
   const menuButton = document.createElement('button');
   menuButton.className = 'sf-nav-button';
   menuButton.textContent = menuGroup.title;
-  menuButton.setAttribute('aria-haspopup', 'true');
-  menuButton.setAttribute('aria-expanded', 'false');
   
   const dropdown = document.createElement('div');
   dropdown.className = 'sf-nav-dropdown';
@@ -127,18 +125,22 @@ function createMenuItem(menuGroup) {
     dropdown.appendChild(link);
   });
   
-  // Toggle dropdown on click
+  // Toggle dropdown on click (use .open class; remove aria-expanded toggling)
   menuButton.addEventListener('click', (e) => {
     e.stopPropagation();
-    const isExpanded = menuButton.getAttribute('aria-expanded') === 'true';
-    
+    const isOpen = menuItem.classList.contains('open');
+
     // Close all other dropdowns
-    document.querySelectorAll('.sf-nav-button').forEach(btn => {
-      btn.setAttribute('aria-expanded', 'false');
+    document.querySelectorAll('.sf-nav-item.open').forEach(mi => {
+      mi.classList.remove('open');
     });
-    
+
     // Toggle this dropdown
-    menuButton.setAttribute('aria-expanded', !isExpanded);
+    if (!isOpen) {
+      menuItem.classList.add('open');
+    } else {
+      menuItem.classList.remove('open');
+    }
   });
   
   menuItem.appendChild(menuButton);
@@ -149,8 +151,8 @@ function createMenuItem(menuGroup) {
 
 // Close dropdowns when clicking outside
 document.addEventListener('click', () => {
-  document.querySelectorAll('.sf-nav-button').forEach(btn => {
-    btn.setAttribute('aria-expanded', 'false');
+  document.querySelectorAll('.sf-nav-item.open').forEach(mi => {
+    mi.classList.remove('open');
   });
 });
 
