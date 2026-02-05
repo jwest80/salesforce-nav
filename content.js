@@ -90,6 +90,178 @@ function injectMenu(container) {
     menuBar.appendChild(menuItem);
   });
 
+  // Add an inline "Settings" dropdown so users can edit config without leaving the page
+  try {
+    const settingsItem = document.createElement('div');
+    settingsItem.className = 'sf-nav-item';
+
+    const settingsButton = document.createElement('button');
+    settingsButton.className = 'sf-nav-button';
+    settingsButton.textContent = 'Settings';
+
+    const settingsDropdown = document.createElement('div');
+    settingsDropdown.className = 'sf-nav-dropdown';
+    settingsDropdown.style.minWidth = '360px';
+    settingsDropdown.style.padding = '12px';
+    settingsDropdown.style.boxSizing = 'border-box';
+
+    // Build settings UI
+    const info = document.createElement('div');
+    info.style.marginBottom = '8px';
+    info.style.fontSize = '12px';
+    info.style.color = '#333';
+    info.textContent = 'Edit menu configuration (JSON). Click Save to persist.';
+
+    const textarea = document.createElement('textarea');
+    textarea.style.width = '100%';
+    textarea.style.height = '200px';
+    textarea.style.fontFamily = 'monospace';
+    textarea.style.fontSize = '12px';
+    textarea.style.padding = '8px';
+    textarea.style.boxSizing = 'border-box';
+    textarea.id = 'sf-settings-config';
+
+    const controls = document.createElement('div');
+    controls.style.display = 'flex';
+    controls.style.gap = '8px';
+    controls.style.marginTop = '8px';
+
+    const saveBtn = document.createElement('button');
+    saveBtn.textContent = 'Save';
+    saveBtn.style.background = '#0070d2';
+    saveBtn.style.color = 'white';
+    saveBtn.style.border = 'none';
+    saveBtn.style.padding = '6px 10px';
+    saveBtn.style.borderRadius = '4px';
+    saveBtn.style.cursor = 'pointer';
+
+    const resetBtn = document.createElement('button');
+    resetBtn.textContent = 'Reset';
+    resetBtn.style.background = '#f3f3f3';
+    resetBtn.style.border = '1px solid #ddd';
+    resetBtn.style.padding = '6px 10px';
+    resetBtn.style.borderRadius = '4px';
+    resetBtn.style.cursor = 'pointer';
+
+    const exportBtn = document.createElement('button');
+    exportBtn.textContent = 'Export';
+    exportBtn.style.background = '#f3f3f3';
+    exportBtn.style.border = '1px solid #ddd';
+    exportBtn.style.padding = '6px 10px';
+    exportBtn.style.borderRadius = '4px';
+    exportBtn.style.cursor = 'pointer';
+
+    const message = document.createElement('div');
+    message.style.display = 'none';
+    message.style.marginTop = '8px';
+    message.style.padding = '8px';
+    message.style.borderRadius = '4px';
+
+    controls.appendChild(saveBtn);
+    controls.appendChild(resetBtn);
+    controls.appendChild(exportBtn);
+
+    settingsDropdown.appendChild(info);
+    settingsDropdown.appendChild(textarea);
+    settingsDropdown.appendChild(controls);
+    settingsDropdown.appendChild(message);
+
+    // Toggle dropdown open/close using same pattern
+    settingsButton.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const isOpen = settingsItem.classList.contains('open');
+
+      // Close other dropdowns
+      document.querySelectorAll('.sf-nav-item.open').forEach(mi => mi.classList.remove('open'));
+
+      if (!isOpen) settingsItem.classList.add('open');
+      else settingsItem.classList.remove('open');
+    });
+
+    // Load stored config into textarea
+    try {
+      chrome.storage.sync.get(['menuConfig'], function(result) {
+        const cfg = result && result.menuConfig ? result.menuConfig : DEFAULT_MENU_CONFIG;
+        textarea.value = JSON.stringify(cfg, null, 2);
+      });
+    } catch (err) {
+      textarea.value = JSON.stringify(DEFAULT_MENU_CONFIG, null, 2);
+    }
+
+    // Save handler
+    saveBtn.addEventListener('click', () => {
+      try {
+        const parsed = JSON.parse(textarea.value);
+        if (!Array.isArray(parsed)) throw new Error('Configuration must be an array');
+        parsed.forEach((group, gi) => {
+          if (!group.title || !Array.isArray(group.items)) throw new Error(`Group ${gi} must have title and items`);
+          group.items.forEach((it, ii) => {
+            if (!it.label || !it.path) throw new Error(`Item ${ii} in group ${gi} must have label and path`);
+          });
+        });
+
+        chrome.storage.sync.set({ menuConfig: parsed }, () => {
+          message.textContent = 'Configuration saved';
+          message.style.display = 'block';
+          message.style.background = '#e6ffed';
+          message.style.border = '1px solid #bde5c9';
+          message.style.color = '#1f6f3d';
+
+          // Close message after a moment
+          setTimeout(() => { message.style.display = 'none'; }, 2500);
+        });
+      } catch (err) {
+        message.textContent = 'Error: ' + err.message;
+        message.style.display = 'block';
+        message.style.background = '#ffecec';
+        message.style.border = '1px solid #f0b3b3';
+        message.style.color = '#8b1b1b';
+      }
+    });
+
+    // Reset handler
+    resetBtn.addEventListener('click', () => {
+      if (!confirm('Reset to default configuration?')) return;
+      textarea.value = JSON.stringify(DEFAULT_MENU_CONFIG, null, 2);
+      chrome.storage.sync.set({ menuConfig: DEFAULT_MENU_CONFIG }, () => {
+        message.textContent = 'Reset to default';
+        message.style.display = 'block';
+        message.style.background = '#e6ffed';
+        message.style.border = '1px solid #bde5c9';
+        message.style.color = '#1f6f3d';
+        setTimeout(() => { message.style.display = 'none'; }, 2500);
+      });
+    });
+
+    // Export handler
+    exportBtn.addEventListener('click', () => {
+      try {
+        const parsed = JSON.parse(textarea.value);
+        const blob = new Blob([JSON.stringify(parsed, null, 2)], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'sf-nav-config.json';
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        URL.revokeObjectURL(url);
+      } catch (err) {
+        message.textContent = 'Invalid JSON: ' + err.message;
+        message.style.display = 'block';
+        message.style.background = '#ffecec';
+        message.style.border = '1px solid #f0b3b3';
+        message.style.color = '#8b1b1b';
+      }
+    });
+
+    settingsItem.appendChild(settingsButton);
+    settingsItem.appendChild(settingsDropdown);
+    menuBar.appendChild(settingsItem);
+  } catch (err) {
+    console.error('[SF Nav] Failed to add Settings dropdown', err);
+  }
+
   // (extension popup button removed)
   
   console.log('[SF Nav] Created menu bar:', menuBar);
