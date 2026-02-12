@@ -13,6 +13,10 @@ const DEFAULT_MENU_CONFIG = [
       {
         "label": "Permission Sets",
         "path": "/lightning/setup/PermSets/home"
+      },
+      {
+        "label": "Tabs",
+        "path": "/lightning/setup/CustomTabs/home"
       }
     ]
   },
