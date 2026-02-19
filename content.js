@@ -87,10 +87,6 @@ function injectMenu(container) {
   const menuBar = document.createElement('div');
   menuBar.id = 'sf-custom-nav';
   menuBar.className = 'sf-custom-nav-bar';
-  // Ensure caret image resolves to the extension's file URL when styles are injected
-  if (typeof chrome !== 'undefined' && chrome.runtime && chrome.runtime.getURL) {
-    menuBar.style.setProperty('--sf-caret-url', `url("${chrome.runtime.getURL('down_carat.png')}")`);
-  }
   
   // Create menu items
   menuConfig.forEach(menuGroup => {
@@ -373,6 +369,8 @@ function injectMenu(container) {
             setTimeout(()=>{ message.textContent=''; }, 2500);
             const existingMenu = document.getElementById('sf-custom-nav');
             if (existingMenu) { existingMenu.remove(); }
+            // Also remove any LI items we injected into a tab bar UL
+            document.querySelectorAll('li.sf-injected-menu-item').forEach(li => li.remove());
             const setupContainer = findSetupContainer();
             if (setupContainer) injectMenu(setupContainer);
           });
@@ -420,14 +418,38 @@ function injectMenu(container) {
   console.log('[SF Nav] Created menu bar:', menuBar);
   console.log('[SF Nav] Menu has', menuConfig.length, 'groups');
   
-  // Insert the menu. If a valid container with a parent is provided, insert after it.
-  // Otherwise fall back to inserting at the top of the body.
-  if (container && container.parentNode) {
-    container.parentNode.insertBefore(menuBar, container.nextSibling);
-    console.log('[SF Nav] Inserted menu after container');
+  // Try to attach to an existing tab bar UL if present (preferred)
+  const targetUL = document.querySelector('ul.tabBarItems.slds-grid[role="presentation"]');
+  if (targetUL && !document.getElementById('sf-custom-nav')) {
+    console.log('[SF Nav] Found target UL for attachment:', targetUL);
+
+    // Move the already-created menuBar children into LI elements so they
+    // appear inside the existing tab bar (prevents duplicate items)
+    Array.from(menuBar.children).forEach(child => {
+      const li = document.createElement('li');
+      li.className = 'sf-injected-menu-item';
+      li.style.listStyle = 'none';
+      li.appendChild(child);
+      targetUL.appendChild(li);
+    });
+
+    // Add a hidden marker so existing checks for #sf-custom-nav still work
+    const marker = document.createElement('div');
+    marker.id = 'sf-custom-nav';
+    marker.style.display = 'none';
+    document.body.appendChild(marker);
+
+    console.log('[SF Nav] Appended menu items to target UL');
   } else {
-    document.body.insertBefore(menuBar, document.body.firstChild);
-    console.log('[SF Nav] Inserted menu at top of body (fallback)');
+    // Insert the menu. If a valid container with a parent is provided, insert after it.
+    // Otherwise fall back to inserting at the top of the body.
+    if (container && container.parentNode) {
+      container.parentNode.insertBefore(menuBar, container.nextSibling);
+      console.log('[SF Nav] Inserted menu after container');
+    } else {
+      document.body.insertBefore(menuBar, document.body.firstChild);
+      console.log('[SF Nav] Inserted menu at top of body (fallback)');
+    }
   }
   
   console.log('[SF Nav] Menu injected successfully');
@@ -507,6 +529,8 @@ chrome.storage.onChanged.addListener((changes, namespace) => {
     if (existingMenu) {
       existingMenu.remove();
     }
+    // Also remove any LI items previously injected into a tab bar UL
+    document.querySelectorAll('li.sf-injected-menu-item').forEach(li => li.remove());
     
     // Re-inject with new config
     const setupContainer = findSetupContainer();

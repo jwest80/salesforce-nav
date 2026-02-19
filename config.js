@@ -1,6 +1,5 @@
 const DEFAULT_MENU_CONFIG = [
   {
-    "title": "Users",
     "items": [
       {
         "label": "Users",
@@ -13,15 +12,11 @@ const DEFAULT_MENU_CONFIG = [
       {
         "label": "Permission Sets",
         "path": "/lightning/setup/PermSets/home"
-      },
-      {
-        "label": "Tabs",
-        "path": "/lightning/setup/CustomTabs/home"
       }
-    ]
+    ],
+    "title": "Users"
   },
   {
-    "title": "Code",
     "items": [
       {
         "label": "Apex Classes",
@@ -34,11 +29,32 @@ const DEFAULT_MENU_CONFIG = [
       {
         "label": "LWC",
         "path": "/lightning/setup/LightningComponentBundles/home"
+      },
+      {
+        "label": "Custom Metadata Types",
+        "path": "/lightning/setup/CustomMetadata/home"
+      },
+      {
+        "label": "App Manager",
+        "path": "/lightning/setup/NavigationMenus/home"
       }
-    ]
+    ],
+    "title": "Code"
   },
   {
-    "title": "Jobs",
+    "items": [
+      {
+        "label": "Account",
+        "path": "/lightning/setup/ObjectManager/Account/Details/view"
+      },
+      {
+        "label": "Plan",
+        "path": "/lightning/setup/ObjectManager/01I0h000000fETd/Details/view"
+      }
+    ],
+    "title": "Objects"
+  },
+  {
     "items": [
       {
         "label": "Scheduled",
@@ -48,19 +64,33 @@ const DEFAULT_MENU_CONFIG = [
         "label": "Bulk Data Load",
         "path": "/lightning/setup/AsyncApiJobStatus/home"
       }
-    ]
+    ],
+    "title": "Jobs"
   },
   {
-    "title": "Platform",
+    "items": [
+      {
+        "label": "Transaction Security Policies",
+        "path": "/lightning/setup/TransactionSecurityNew/home"
+      },
+      {
+        "label": "Event Manager",
+        "path": "/lightning/setup/EventManager/home"
+      },
+      {
+        "label": "Event Log File Browser",
+        "path": "/lightning/setup/ElfBrowser/home"
+      }
+    ],
+    "title": "Security"
+  },
+  {
     "items": [
       {
         "label": "Company Info",
         "path": "/lightning/setup/CompanyProfileInfo/home"
-      },
-      {
-        "label": "Storage",
-        "path": "/lightning/setup/CompanyResourceDisk/home"
       }
-    ]
+    ],
+    "title": "Platform"
   }
 ];
